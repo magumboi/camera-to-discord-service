@@ -53,4 +53,15 @@ public class PhotoUploadController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
+
+    @GetMapping("/queue-status")
+    public ResponseEntity<Map<String, Object>> getQueueStatus() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("queueSize", webhookService.getQueueSize());
+        status.put("currentRequestCount", webhookService.getCurrentRequestCount());
+        status.put("requestsPerMinute", webhookService.getRequestsPerMinute());
+        status.put("isRateLimited", webhookService.isRateLimited());
+        
+        return ResponseEntity.ok(status);
+    }
 }
