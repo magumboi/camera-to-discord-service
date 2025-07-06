@@ -416,7 +416,6 @@ window.addEventListener("load", cameraStart, false);
 //show photo in a sweet alert
 function showPhoto(photoUrl, autoUploadOnClose = false) {
     Swal.fire({
-        title: 'Foto tomada',
         imageUrl: photoUrl,
         imageWidth: 'auto',
         imageHeight: 'auto',
@@ -425,6 +424,8 @@ function showPhoto(photoUrl, autoUploadOnClose = false) {
         confirmButtonText: 'Subir',
         showCancelButton: true,
         cancelButtonText: 'Cerrar',
+        showDenyButton: true,
+        denyButtonText: 'Descargar',
         width: '90vw', // 90% of viewport width
         heightAuto: false, // Prevent auto height
         background: 'rgba(0, 0, 0, 0.9)', // Dark semi-transparent background
@@ -435,7 +436,8 @@ function showPhoto(photoUrl, autoUploadOnClose = false) {
             title: 'swal-title-white',
             actions: 'swal-actions-inline',
             confirmButton: 'swal-confirm-button',
-            cancelButton: 'swal-cancel-button'
+            cancelButton: 'swal-cancel-button',
+            denyButton: 'swal-download-button'
         },
         didOpen: () => {
             // Ensure image fits within viewport
@@ -456,6 +458,9 @@ function showPhoto(photoUrl, autoUploadOnClose = false) {
         if (result.isConfirmed) {
             // User clicked "Subir" - always show success/error messages
             uploadPhoto(photoUrl, true);
+        } else if (result.isDenied) {
+            // User clicked "Descargar" - download the photo
+            downloadPhoto(photoUrl, new Date().toISOString());
         } else if (autoUploadOnClose && (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.cancel)) {
             // Only upload silently if this was called after taking a new photo
             uploadPhoto(photoUrl, false);
@@ -552,7 +557,6 @@ function showGalleryPhoto(photoUrl, index) {
     });
     
     Swal.fire({
-        title: 'Foto de Galería',
         html: `<div class="gallery-photo-info">
                   <div class="gallery-photo-timestamp">📅 ${formattedDate}</div>
                </div>`,

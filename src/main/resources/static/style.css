@@ -156,45 +156,10 @@ body {
     letter-spacing: 0.3px !important;
 }
 
-.swal-confirm-button {
-    background-color: #007bff !important;
-    border: none !important;
-    border-radius: 6px !important;
-    padding: 8px 20px !important;
-    color: white !important;
-    font-weight: 500 !important;
-    font-family: 'Inter', sans-serif !important;
-    letter-spacing: 0.3px !important;
-    transition: all 0.2s ease !important;
-}
-
-.swal-confirm-button:hover {
-    background-color: #0056b3 !important;
-    transform: translateY(-1px) !important;
-}
-
-.swal-cancel-button {
-    background-color: #6c757d !important;
-    border: none !important;
-    border-radius: 6px !important;
-    padding: 8px 20px !important;
-    color: white !important;
-    font-weight: 500 !important;
-    font-family: 'Inter', sans-serif !important;
-    letter-spacing: 0.3px !important;
-    transition: all 0.2s ease !important;
-    margin-left: 10px !important;
-}
-
-.swal-cancel-button:hover {
-    background-color: #5a6268 !important;
-    transform: translateY(-1px) !important;
-}
-
-/* Download button styles */
+/* Standardized button styles */
+.swal-confirm-button,
+.swal-cancel-button,
 .swal-download-button {
-    background: linear-gradient(135deg, #28a745, #20c997) !important;
-    color: white !important;
     border: none !important;
     padding: 12px 24px !important;
     border-radius: 25px !important;
@@ -203,8 +168,43 @@ body {
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
     margin: 0 5px !important;
+    min-width: 120px !important;
+    cursor: pointer !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Confirm button (Upload) - Blue */
+.swal-confirm-button {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3) !important;
+}
+
+.swal-confirm-button:hover {
+    background: linear-gradient(135deg, #0056b3, #004085) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4) !important;
+}
+
+/* Cancel button (Close/Back) - Gray */
+.swal-cancel-button {
+    background: linear-gradient(135deg, #6c757d, #545b62) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3) !important;
+}
+
+.swal-cancel-button:hover {
+    background: linear-gradient(135deg, #545b62, #383d41) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4) !important;
+}
+
+/* Download button - Green */
+.swal-download-button {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
 }
 
 .swal-download-button:hover {
@@ -213,9 +213,54 @@ body {
     box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
 }
 
+/* Active states for all buttons */
+.swal-confirm-button:active,
+.swal-cancel-button:active,
 .swal-download-button:active {
     transform: translateY(0) !important;
-    box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Button container responsive layout */
+.swal-actions-inline {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    margin-top: 1rem !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .swal-confirm-button,
+    .swal-cancel-button,
+    .swal-download-button {
+        font-size: 12px !important;
+        padding: 10px 16px !important;
+        margin: 2px !important;
+        min-width: 100px !important;
+    }
+    
+    .swal-actions-inline {
+        gap: 6px !important;
+    }
+}
+
+/* Landscape mode adjustments */
+@media (orientation: landscape) and (max-height: 600px) {
+    .swal-confirm-button,
+    .swal-cancel-button,
+    .swal-download-button {
+        font-size: 11px !important;
+        padding: 8px 14px !important;
+        margin: 2px !important;
+        min-width: 90px !important;
+    }
+    
+    .swal-actions-inline {
+        gap: 4px !important;
+        margin-top: 0.5rem !important;
+    }
 }
 
 /* Landscape orientation layout */
