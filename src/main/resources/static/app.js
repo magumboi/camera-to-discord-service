@@ -1,6 +1,6 @@
 // Set constraints for the video stream
-var constraints = { 
-    video: { 
+var constraints = {
+    video: {
         facingMode: "user",
         focusMode: "continuous",
         width: { ideal: 1920 },
@@ -10,8 +10,8 @@ var constraints = {
         exposureMode: "continuous",
         whiteBalanceMode: "continuous",
         imageStabilization: true
-    }, 
-    audio: false 
+    },
+    audio: false
 };
 var track = null;
 
@@ -29,19 +29,19 @@ function cameraStart() {
         .then(function (stream) {
             track = stream.getTracks()[0];
             cameraView.srcObject = stream;
-            
+
             // Configure camera settings for better image quality
             if (track.getCapabilities) {
                 const capabilities = track.getCapabilities();
                 console.log('Camera capabilities:', capabilities);
-                
+
                 // Apply anti-blur settings
                 applyAntiBlurSettings(capabilities);
             }
-            
+
             // Update mirror effect based on camera facing mode
             updateCameraMirror();
-            
+
             // Start motion detection after camera is ready
             cameraView.addEventListener('loadedmetadata', () => {
                 setTimeout(() => {
@@ -57,27 +57,27 @@ function cameraStart() {
 // Apply settings to reduce motion blur
 function applyAntiBlurSettings(capabilities) {
     const settings = {};
-    
+
     // Set higher shutter speed if available
     if (capabilities.exposureTime) {
-        settings.exposureTime = capabilities.exposureTime.min || 1/60; // Fast shutter speed
+        settings.exposureTime = capabilities.exposureTime.min || 1 / 60; // Fast shutter speed
     }
-    
+
     // Set lower ISO if available to reduce noise
     if (capabilities.iso) {
         settings.iso = capabilities.iso.min || 100;
     }
-    
+
     // Enable image stabilization if available
     if (capabilities.imageStabilization) {
         settings.imageStabilization = true;
     }
-    
+
     // Set focus mode for sharp images
     if (capabilities.focusMode && capabilities.focusMode.includes('single-shot')) {
         settings.focusMode = 'single-shot';
     }
-    
+
     // Apply the settings
     if (Object.keys(settings).length > 0) {
         track.applyConstraints({
@@ -106,10 +106,10 @@ cameraTrigger.onclick = function () {
     // Check if there's too much movement using average motion
     if (motionHistory.length >= 4) { // Need fewer frames for faster response (was 5)
         const avgMotion = motionHistory.reduce((sum, val) => sum + val, 0) / motionHistory.length;
-        
+
         // Use a lower threshold for blocking photos (more sensitive)
         const photoBlockThreshold = motionThreshold * 2.0; // 200% higher threshold (was 250%)
-        
+
         if (avgMotion > photoBlockThreshold) {
             // Show warning for excessive movement
             Swal.fire({
@@ -122,7 +122,7 @@ cameraTrigger.onclick = function () {
             return;
         }
     }
-    
+
     // Add a slightly longer delay for better stabilization
     setTimeout(() => {
         capturePhoto();
@@ -136,16 +136,16 @@ function capturePhoto() {
         console.warn('Video not ready for capture');
         return;
     }
-    
+
     // Set canvas size to match video dimensions exactly
     cameraSensor.width = cameraView.videoWidth;
     cameraSensor.height = cameraView.videoHeight;
     const context = cameraSensor.getContext("2d");
-    
+
     // Configure context for high quality rendering
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
-    
+
     // Apply focus before capture if supported
     if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
@@ -180,14 +180,14 @@ function performCapture(context) {
         // For back camera (environment mode), draw normally without flipping
         context.drawImage(cameraView, 0, 0);
     }
-    
+
     // Convert to high quality image
     cameraOutput.src = cameraSensor.toDataURL("image/jpeg", 0.95); // High quality JPEG
     cameraOutput.classList.add("taken");
-    
+
     // Add photo to gallery
     addPhotoToGallery(cameraOutput.src);
-    
+
     // Show the photo in a sweet alert
     showPhoto(cameraOutput.src, true); // Auto-upload on close since this is a new photo
 }
@@ -200,7 +200,7 @@ cameraToggle.onclick = function () {
     isMotionDetectionActive = false;
     lastFrameData = null;
     motionHistory = []; // Clear motion history
-    
+
     if (constraints.video.facingMode === "user") {
         constraints.video.facingMode = "environment"; // Switch to back camera
     } else {
@@ -218,10 +218,10 @@ function focusCamera(x, y) {
     if (track && track.getCapabilities) {
         const capabilities = track.getCapabilities();
         console.log('Camera capabilities:', capabilities);
-        
+
         // Try different focus approaches
         let focusAttempts = [];
-        
+
         // Method 1: Try focus with coordinates
         if (capabilities.focusMode && capabilities.focusMode.includes('manual')) {
             const constraintsWithCoords = {
@@ -232,7 +232,7 @@ function focusCamera(x, y) {
             };
             focusAttempts.push(constraintsWithCoords);
         }
-        
+
         // Method 2: Try single-shot focus
         if (capabilities.focusMode && capabilities.focusMode.includes('single-shot')) {
             const constraintsSingleShot = {
@@ -242,7 +242,7 @@ function focusCamera(x, y) {
             };
             focusAttempts.push(constraintsSingleShot);
         }
-        
+
         // Method 3: Try continuous focus as fallback
         if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
             const constraintsContinuous = {
@@ -252,7 +252,7 @@ function focusCamera(x, y) {
             };
             focusAttempts.push(constraintsContinuous);
         }
-        
+
         // Try each method in sequence
         async function tryFocusMethods() {
             for (let i = 0; i < focusAttempts.length; i++) {
@@ -266,7 +266,7 @@ function focusCamera(x, y) {
             }
             console.warn('All focus methods failed');
         }
-        
+
         tryFocusMethods();
     } else {
         console.warn('Focus not supported on this device');
@@ -274,35 +274,35 @@ function focusCamera(x, y) {
 }
 
 // Add tap-to-focus functionality
-cameraView.addEventListener('click', function(event) {
+cameraView.addEventListener('click', function (event) {
     event.preventDefault();
-    
+
     const rect = cameraView.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    
+
     // Convert to normalized coordinates (0-1)
     const normalizedX = Math.max(0, Math.min(1, x / rect.width));
     const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-    
+
     console.log('Tap to focus at:', { x: normalizedX, y: normalizedY });
     focusCamera(normalizedX, normalizedY);
 });
 
 // Also add touch event for mobile devices
-cameraView.addEventListener('touchstart', function(event) {
+cameraView.addEventListener('touchstart', function (event) {
     event.preventDefault();
-    
+
     if (event.touches.length === 1) {
         const touch = event.touches[0];
         const rect = cameraView.getBoundingClientRect();
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
-        
+
         // Convert to normalized coordinates (0-1)
         const normalizedX = Math.max(0, Math.min(1, x / rect.width));
         const normalizedY = Math.max(0, Math.min(1, y / rect.height));
-        
+
         console.log('Touch to focus at:', { x: normalizedX, y: normalizedY });
         focusCamera(normalizedX, normalizedY);
     }
@@ -328,29 +328,29 @@ function loadGalleryFromStorage() {
         console.warn('localStorage not available, gallery will not persist');
         return;
     }
-    
+
     try {
         const savedGallery = localStorage.getItem(GALLERY_STORAGE_KEY);
         if (savedGallery) {
             const parsedGallery = JSON.parse(savedGallery);
-            
+
             // Validate the data structure
             if (Array.isArray(parsedGallery)) {
-                persistentGallery = parsedGallery.filter(photo => 
+                persistentGallery = parsedGallery.filter(photo =>
                     photo && photo.url && photo.timestamp && photo.id
                 );
-                
+
                 // Ensure we don't exceed maxPersistentSize
                 if (persistentGallery.length > maxPersistentSize) {
                     persistentGallery = persistentGallery.slice(0, maxPersistentSize);
                     saveGalleryToStorage(); // Save the trimmed version
                 }
-                
+
                 // Copy persistent gallery to display gallery
                 photoGallery = [...persistentGallery];
-                
+
                 console.log(`Loaded ${persistentGallery.length} photos from localStorage`);
-                
+
                 // Update camera output thumbnail if there are photos
                 if (photoGallery.length > 0) {
                     const lastPhoto = photoGallery[0];
@@ -374,7 +374,7 @@ function saveGalleryToStorage() {
         console.warn('localStorage not available, gallery will not persist');
         return;
     }
-    
+
     try {
         // Only save the persistent gallery (first 3 photos)
         const galleryData = JSON.stringify(persistentGallery);
@@ -382,11 +382,11 @@ function saveGalleryToStorage() {
         console.log(`Saved ${persistentGallery.length} photos to localStorage (${photoGallery.length} total in memory)`);
     } catch (error) {
         console.error('Error saving gallery to localStorage:', error);
-        
+
         // If storage is full, try with even fewer photos
         if (error.name === 'QuotaExceededError') {
             console.warn('Storage quota exceeded, reducing persistent photos');
-            
+
             // Try with 2 photos
             if (persistentGallery.length > 2) {
                 persistentGallery = persistentGallery.slice(0, 2);
@@ -398,7 +398,7 @@ function saveGalleryToStorage() {
                     console.warn('Still failed with 2 photos, trying with 1');
                 }
             }
-            
+
             // Try with just 1 photo
             if (persistentGallery.length > 1) {
                 persistentGallery = persistentGallery.slice(0, 1);
@@ -422,7 +422,7 @@ function clearGalleryFromStorage() {
         photoGallery = [];
         persistentGallery = [];
         console.log('Gallery cleared from localStorage');
-        
+
         // Reset camera output
         cameraOutput.src = '';
         cameraOutput.classList.remove("taken");
@@ -450,7 +450,7 @@ function getAvailableStorageSpace() {
     if (!isLocalStorageAvailable()) {
         return 0;
     }
-    
+
     try {
         // Rough estimation of localStorage usage
         const totalUsed = JSON.stringify(localStorage).length;
@@ -466,15 +466,15 @@ function getAvailableStorageSpace() {
 function calculateOptimalPersistentSize() {
     const availableSpace = getAvailableStorageSpace();
     const currentGallerySize = getGalleryStorageSize();
-    
+
     if (persistentGallery.length === 0) {
         return maxPersistentSize;
     }
-    
+
     // Estimate average photo size from current gallery
     const avgPhotoSize = currentGallerySize / persistentGallery.length;
     const photosCanFit = Math.floor((availableSpace + currentGallerySize) / avgPhotoSize);
-    
+
     // Return optimal size, but not more than maxPersistentSize
     return Math.min(Math.max(1, photosCanFit), maxPersistentSize);
 }
@@ -506,34 +506,34 @@ function detectMotion() {
         setTimeout(detectMotion, 150);
         return;
     }
-    
+
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     canvas.width = 100; // Slightly higher resolution for more sensitivity (was 80)
     canvas.height = 75;
-    
+
     // Draw current frame
     context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
     const currentFrameData = context.getImageData(0, 0, canvas.width, canvas.height);
-    
+
     if (lastFrameData) {
         const motionLevel = calculateMotionLevel(lastFrameData, currentFrameData);
-        
+
         // Add to motion history
         motionHistory.push(motionLevel);
         if (motionHistory.length > maxMotionHistory) {
             motionHistory.shift(); // Remove oldest entry
         }
-        
+
         // Calculate average motion over recent frames for better stability
         const avgMotion = motionHistory.reduce((sum, val) => sum + val, 0) / motionHistory.length;
-        
+
         // Update UI based on average motion level
         updateMotionIndicator(avgMotion);
     }
-    
+
     lastFrameData = currentFrameData;
-    
+
     // Continue motion detection
     if (isMotionDetectionActive) {
         setTimeout(detectMotion, 200); // Faster check for more sensitivity (was 250)
@@ -546,20 +546,20 @@ function calculateMotionLevel(frame1, frame2) {
     const data1 = frame1.data;
     const data2 = frame2.data;
     let pixelCount = 0;
-    
+
     // Sample every 3rd pixel for better sensitivity (was every 4th)
     for (let i = 0; i < data1.length; i += 12) { // Less skipping for more sensitivity (was 16)
-        const diff = Math.abs(data1[i] - data2[i]) + 
-                    Math.abs(data1[i + 1] - data2[i + 1]) + 
-                    Math.abs(data1[i + 2] - data2[i + 2]);
-        
+        const diff = Math.abs(data1[i] - data2[i]) +
+            Math.abs(data1[i + 1] - data2[i + 1]) +
+            Math.abs(data1[i + 2] - data2[i + 2]);
+
         // Lower threshold for counting differences
         if (diff > 20) { // More sensitive (was 30)
             totalDiff += diff;
         }
         pixelCount++;
     }
-    
+
     return pixelCount > 0 ? totalDiff / pixelCount : 0;
 }
 
@@ -568,7 +568,7 @@ function updateMotionIndicator(motionLevel) {
     // Use a lower threshold for the visual indicator for more sensitivity
     const visualThreshold = motionThreshold * 1.1; // Only 10% higher than base threshold (was 1.3)
     const isMoving = motionLevel > visualThreshold;
-    
+
     if (isMoving) {
         cameraTrigger.style.backgroundColor = '#ff8888'; // Even softer red color
         cameraTrigger.textContent = 'Estabilizando...';
@@ -576,7 +576,7 @@ function updateMotionIndicator(motionLevel) {
         cameraTrigger.style.backgroundColor = 'black';
         cameraTrigger.textContent = 'Tomar foto';
     }
-    
+
     // Reduced logging frequency for less console spam
     if (Math.random() < 0.1) { // Only log 10% of the time
         console.log('Motion level:', motionLevel.toFixed(2), 'Visual threshold:', visualThreshold.toFixed(2));
@@ -584,13 +584,13 @@ function updateMotionIndicator(motionLevel) {
 }
 
 // Start the video stream when the window loads
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
     // Load gallery from localStorage first
     loadGalleryFromStorage();
-    
+
     // Show storage info for debugging
     showStorageInfo();
-    
+
     // Then start the camera
     cameraStart();
 }, false);
@@ -629,7 +629,7 @@ function showPhoto(photoUrl, autoUploadOnClose = false) {
                 image.style.maxHeight = '70vh'; // Max 70% of viewport height
                 image.style.objectFit = 'contain';
             }
-            
+
             // Adjust layout for landscape orientation
             const popup = document.querySelector('.swal2-popup');
             if (window.innerWidth > window.innerHeight) {
@@ -658,23 +658,23 @@ function addPhotoToGallery(photoDataUrl) {
         timestamp: new Date().toISOString(),
         id: Date.now() + Math.random() // Unique ID
     };
-    
+
     // Add to beginning of display gallery
     photoGallery.unshift(photoData);
-    
+
     // Keep only the last 6 photos for display
     if (photoGallery.length > maxGallerySize) {
         photoGallery = photoGallery.slice(0, maxGallerySize);
     }
-    
+
     // Add to persistent gallery (only first 3)
     persistentGallery.unshift(photoData);
-    
+
     // Keep only the last 3 photos for storage
     if (persistentGallery.length > maxPersistentSize) {
         persistentGallery = persistentGallery.slice(0, maxPersistentSize);
     }
-    
+
     // Save to localStorage
     saveGalleryToStorage();
 }
@@ -700,7 +700,7 @@ function showPhotoGallery() {
 
     // Create gallery HTML
     let galleryHTML = '<div class="photo-gallery">';
-    
+
     photoGallery.forEach((photo, index) => {
         galleryHTML += `
             <div class="gallery-item" onclick="showGalleryPhoto('${photo.url}', ${index})">
@@ -711,7 +711,7 @@ function showPhotoGallery() {
             </div>
         `;
     });
-    
+
     galleryHTML += '</div>';
 
     Swal.fire({
@@ -748,7 +748,7 @@ function showGalleryPhoto(photoUrl, index) {
         minute: '2-digit',
         second: '2-digit'
     });
-    
+
     Swal.fire({
         html: `<div class="gallery-photo-info">
                   <div class="gallery-photo-timestamp">📅 ${formattedDate}</div>
@@ -784,7 +784,7 @@ function showGalleryPhoto(photoUrl, index) {
                 image.style.maxHeight = '70vh';
                 image.style.objectFit = 'contain';
             }
-            
+
             // Adjust layout for landscape orientation
             const popup = document.querySelector('.swal2-popup');
             if (window.innerWidth > window.innerHeight) {
@@ -813,7 +813,7 @@ function showGalleryPhoto(photoUrl, index) {
 window.showGalleryPhoto = showGalleryPhoto;
 
 // Show photo gallery when clicked
-cameraOutput.addEventListener('click', function() {
+cameraOutput.addEventListener('click', function () {
     if (cameraOutput.classList.contains("taken")) {
         showPhotoGallery();
     }
@@ -823,7 +823,7 @@ cameraOutput.addEventListener('click', function() {
 async function uploadPhoto(imageDataUrl, showMessages = true) {
     // Get webhook URL from Thymeleaf variable
     const webhookUrl = window.webhookUrl;
-    
+
     if (!webhookUrl) {
         if (showMessages) {
             Swal.fire({
@@ -866,21 +866,21 @@ async function uploadPhoto(imageDataUrl, showMessages = true) {
         // Convert data URL to blob
         const response = await fetch(imageDataUrl);
         const blob = await response.blob();
-        
+
         // Create form data
         const formData = new FormData();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `camera-photo-${timestamp}.jpg`;
-        
+
         formData.append('file', blob, filename);
         formData.append('content', `📸 Nueva foto tomada - ${new Date().toLocaleString()}`);
-        
+
         // Send to webhook
         const webhookResponse = await fetch(webhookUrl, {
             method: 'POST',
             body: formData
         });
-        
+
         if (webhookResponse.ok) {
             // Success - only show message if enabled
             if (showMessages) {
@@ -903,7 +903,7 @@ async function uploadPhoto(imageDataUrl, showMessages = true) {
         }
     } catch (error) {
         console.error('Error uploading photo:', error);
-        
+
         // Show error message only if enabled
         if (showMessages) {
             Swal.fire({
@@ -929,18 +929,18 @@ function downloadPhoto(imageDataUrl, timestamp) {
         // Create a download link
         const link = document.createElement('a');
         link.href = imageDataUrl;
-        
+
         // Generate filename with timestamp
         const date = new Date(timestamp);
-        const formattedTimestamp = date.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' + 
-                                   date.toTimeString().split(' ')[0].replace(/:/g, '-');
+        const formattedTimestamp = date.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' +
+            date.toTimeString().split(' ')[0].replace(/:/g, '-');
         link.download = `camera-photo-${formattedTimestamp}.jpg`;
-        
+
         // Trigger download
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Show success message
         Swal.fire({
             title: '¡Descarga iniciada!',
@@ -957,7 +957,7 @@ function downloadPhoto(imageDataUrl, timestamp) {
         });
     } catch (error) {
         console.error('Error downloading photo:', error);
-        
+
         // Show error message
         Swal.fire({
             title: 'Error al descargar',
@@ -981,13 +981,13 @@ function showStorageInfo() {
         console.log('Storage Info: localStorage not available');
         return;
     }
-    
+
     try {
         const gallerySize = getGalleryStorageSize();
         const totalStorage = JSON.stringify(localStorage).length;
         const availableSpace = getAvailableStorageSpace();
         const optimalSize = calculateOptimalPersistentSize();
-        
+
         console.log('Storage Info:', {
             displayPhotos: photoGallery.length,
             persistentPhotos: persistentGallery.length,
@@ -1009,9 +1009,9 @@ function optimizeStorageSize() {
     if (!isLocalStorageAvailable()) {
         return;
     }
-    
+
     const optimalSize = calculateOptimalPersistentSize();
-    
+
     if (optimalSize < persistentGallery.length) {
         console.log(`Optimizing storage: reducing from ${persistentGallery.length} to ${optimalSize} photos`);
         persistentGallery = persistentGallery.slice(0, optimalSize);
@@ -1027,15 +1027,15 @@ function addSessionPhoto(photoDataUrl) {
         id: Date.now() + Math.random(),
         sessionOnly: true // Mark as session-only
     };
-    
+
     // Add to display gallery only (not persistent)
     photoGallery.unshift(photoData);
-    
+
     // Keep only the last 6 photos for display
     if (photoGallery.length > maxGallerySize) {
         photoGallery = photoGallery.slice(0, maxGallerySize);
     }
-    
+
     console.log(`Added session-only photo. Display: ${photoGallery.length}, Persistent: ${persistentGallery.length}`);
 }
 
