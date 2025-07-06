@@ -99,4 +99,55 @@ class PhotoUploadControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Webhook no configurado. La URL del webhook no está configurada en el servidor."));
     }
+
+    @Test
+    void testUploadPhoto_NoFileParameter() throws Exception {
+        // Perform request without file parameter
+        mockMvc.perform(multipart("/api/upload-photo"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("No file provided"));
+    }
+
+    @Test
+    void testUploadPhoto_LargeFile() throws Exception {
+        // Mock successful upload
+        when(webhookService.uploadPhotoToWebhook(any()))
+                .thenReturn(Mono.just("Upload successful"));
+
+        // Create a large mock image file (simulate large photo)
+        byte[] largeContent = new byte[1024 * 1024]; // 1MB
+        MockMultipartFile file = new MockMultipartFile(
+                "file", 
+                "large-image.jpg", 
+                MediaType.IMAGE_JPEG_VALUE, 
+                largeContent
+        );
+
+        // Perform the request
+        mockMvc.perform(multipart("/api/upload-photo")
+                        .file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Photo uploaded successfully"));
+    }
+
+    @Test
+    void testUploadPhoto_WebhookError() throws Exception {
+        // Mock the webhook service to throw a network error
+        when(webhookService.uploadPhotoToWebhook(any()))
+                .thenReturn(Mono.error(new RuntimeException("Network connection failed")));
+
+        // Create a mock image file
+        MockMultipartFile file = new MockMultipartFile(
+                "file", 
+                "test-image.jpg", 
+                MediaType.IMAGE_JPEG_VALUE, 
+                "fake image content".getBytes()
+        );
+
+        // Perform the request
+        mockMvc.perform(multipart("/api/upload-photo")
+                        .file(file))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("Failed to upload photo: Network connection failed"));
+    }
 }

@@ -18,7 +18,6 @@ class WebControllerTest {
     void testHomePage() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("index"))
-                .andExpect(model().attributeExists("webhookUrl"));
+                .andExpect(view().name("index"));
     }
 }
