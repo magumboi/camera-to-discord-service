@@ -24,7 +24,8 @@ public class WebhookService {
 
     public WebhookService() {
         this.webClient = WebClient.builder()
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB limit
+                // 25MB limit
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(25 * 1024 * 1024)) // 25MB limit
                 .build();
     }
 
