@@ -36,6 +36,10 @@
 
 		<!-- Reference to your JavaScript file -->
 		 
+		<!-- Webhook URL from server -->
+		<script th:inline="javascript">
+			window.webhookUrl = /*[[${webhookUrl}]]*/ '';
+		</script>
 		 
 		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

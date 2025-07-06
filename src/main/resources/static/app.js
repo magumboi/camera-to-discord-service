@@ -189,12 +189,7 @@ function performCapture(context) {
     showPhoto(cameraOutput.src);
 }
 
-// Show the photo in a sweet alert
-cameraOutput.onclick = function () {
-    if (cameraOutput.classList.contains("taken")) {
-        showPhoto(cameraOutput.src);
-    }
-}
+// Photo click handled by the double-tap listener above
 
 // Toggle between front and back camera
 cameraToggle.onclick = function () {
@@ -420,7 +415,9 @@ function showPhoto(photoUrl) {
         imageHeight: 'auto',
         imageAlt: 'Foto tomada',
         showCloseButton: true,
-        confirmButtonText: 'Aceptar',
+        confirmButtonText: 'Subir',
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar',
         width: '90vw', // 90% of viewport width
         heightAuto: false, // Prevent auto height
         background: 'rgba(0, 0, 0, 0.9)', // Dark semi-transparent background
@@ -430,7 +427,8 @@ function showPhoto(photoUrl) {
             image: 'swal-responsive-image',
             title: 'swal-title-white',
             actions: 'swal-actions-inline',
-            confirmButton: 'swal-confirm-button'
+            confirmButton: 'swal-confirm-button',
+            cancelButton: 'swal-cancel-button'
         },
         didOpen: () => {
             // Ensure image fits within viewport
@@ -447,5 +445,117 @@ function showPhoto(photoUrl) {
                 popup.classList.add('swal-landscape');
             }
         }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // User clicked "Subir"
+            uploadPhoto(photoUrl);
+        } else if (result.dismiss === Swal.DismissReason.close) {
+            // User clicked the close button - also upload photo
+            uploadPhoto(photoUrl);
+        }
+        // If cancelled, do nothing
     });
+}
+
+// Show photo in sweet alert when clicked
+cameraOutput.addEventListener('click', function() {
+    if (cameraOutput.classList.contains("taken")) {
+        showPhoto(cameraOutput.src);
+    }
+});
+
+// Function to upload photo to webhook
+async function uploadPhoto(imageDataUrl) {
+    // Get webhook URL from Thymeleaf variable
+    const webhookUrl = window.webhookUrl;
+    
+    if (!webhookUrl) {
+        Swal.fire({
+            title: 'Webhook no configurado',
+            text: 'La URL del webhook no está configurada en el servidor.',
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#ffffff',
+            customClass: {
+                popup: 'swal-responsive-popup',
+                title: 'swal-title-white',
+                confirmButton: 'swal-confirm-button'
+            }
+        });
+        return;
+    }
+
+    try {
+        // Show loading indicator
+        Swal.fire({
+            title: 'Subiendo foto...',
+            text: 'Por favor espera mientras se sube la foto',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#ffffff',
+            customClass: {
+                popup: 'swal-responsive-popup',
+                title: 'swal-title-white'
+            },
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Convert data URL to blob
+        const response = await fetch(imageDataUrl);
+        const blob = await response.blob();
+        
+        // Create form data
+        const formData = new FormData();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `camera-photo-${timestamp}.jpg`;
+        
+        formData.append('file', blob, filename);
+        formData.append('content', `📸 Nueva foto tomada - ${new Date().toLocaleString()}`);
+        
+        // Send to webhook
+        const webhookResponse = await fetch(webhookUrl, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (webhookResponse.ok) {
+            // Success
+            Swal.fire({
+                title: '¡Foto subida!',
+                text: 'La foto se ha subido exitosamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                background: 'rgba(0, 0, 0, 0.9)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'swal-responsive-popup',
+                    title: 'swal-title-white'
+                }
+            });
+        } else {
+            throw new Error(`Webhook API error: ${webhookResponse.status}`);
+        }
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        
+        // Show error message
+        Swal.fire({
+            title: 'Error al subir',
+            text: 'No se pudo subir la foto. Verifica la configuración del servidor.',
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#ffffff',
+            customClass: {
+                popup: 'swal-responsive-popup',
+                title: 'swal-title-white',
+                confirmButton: 'swal-confirm-button'
+            }
+        });
+    }
 }
