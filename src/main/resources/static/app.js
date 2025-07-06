@@ -185,6 +185,9 @@ function performCapture(context) {
     cameraOutput.src = cameraSensor.toDataURL("image/jpeg", 0.95); // High quality JPEG
     cameraOutput.classList.add("taken");
     
+    // Add photo to gallery
+    addPhotoToGallery(cameraOutput.src);
+    
     // Show the photo in a sweet alert
     showPhoto(cameraOutput.src, true); // Auto-upload on close since this is a new photo
 }
@@ -311,6 +314,10 @@ let motionThreshold = 80; // More sensitive (was 120)
 let isMotionDetectionActive = false;
 let motionHistory = []; // Track motion over time for better stability
 let maxMotionHistory = 6; // Fewer frames for faster response (was 8)
+
+// Photo gallery storage
+let photoGallery = []; // Store the last 6 photos
+const maxGallerySize = 6;
 
 // Start motion detection when camera starts
 function startMotionDetection() {
@@ -457,10 +464,94 @@ function showPhoto(photoUrl, autoUploadOnClose = false) {
     });
 }
 
-// Show photo in sweet alert when clicked
+// Add photo to gallery
+function addPhotoToGallery(photoDataUrl) {
+    const photoData = {
+        url: photoDataUrl,
+        timestamp: new Date().toISOString(),
+        id: Date.now() + Math.random() // Unique ID
+    };
+    
+    // Add to beginning of array
+    photoGallery.unshift(photoData);
+    
+    // Keep only the last 6 photos
+    if (photoGallery.length > maxGallerySize) {
+        photoGallery = photoGallery.slice(0, maxGallerySize);
+    }
+}
+
+// Show photo gallery
+function showPhotoGallery() {
+    if (photoGallery.length === 0) {
+        Swal.fire({
+            title: 'Galería vacía',
+            text: 'No hay fotos tomadas aún',
+            icon: 'info',
+            confirmButtonText: 'Entendido',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#ffffff',
+            customClass: {
+                popup: 'swal-responsive-popup',
+                title: 'swal-title-white',
+                confirmButton: 'swal-confirm-button'
+            }
+        });
+        return;
+    }
+
+    // Create gallery HTML
+    let galleryHTML = '<div class="photo-gallery">';
+    
+    photoGallery.forEach((photo, index) => {
+        galleryHTML += `
+            <div class="gallery-item" onclick="showGalleryPhoto('${photo.url}', ${index})">
+                <img src="${photo.url}" alt="Foto ${index + 1}" class="gallery-thumbnail">
+                <div class="gallery-item-info">
+                    <span class="gallery-timestamp">${new Date(photo.timestamp).toLocaleString()}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    galleryHTML += '</div>';
+
+    Swal.fire({
+        title: 'Galería de Fotos',
+        html: galleryHTML,
+        width: '95vw',
+        heightAuto: false,
+        showCloseButton: true,
+        showConfirmButton: false,
+        background: 'rgba(0, 0, 0, 0.9)',
+        color: '#ffffff',
+        customClass: {
+            popup: 'swal-gallery-popup',
+            title: 'swal-title-white'
+        },
+        didOpen: () => {
+            // Add responsive layout for landscape
+            const popup = document.querySelector('.swal2-popup');
+            if (window.innerWidth > window.innerHeight) {
+                popup.classList.add('swal-gallery-landscape');
+            }
+        }
+    });
+}
+
+// Show individual photo from gallery
+function showGalleryPhoto(photoUrl, index) {
+    const photo = photoGallery[index];
+    showPhoto(photoUrl, false); // Don't auto-upload on close since this is just viewing
+}
+
+// Make showGalleryPhoto globally accessible
+window.showGalleryPhoto = showGalleryPhoto;
+
+// Show photo gallery when clicked
 cameraOutput.addEventListener('click', function() {
     if (cameraOutput.classList.contains("taken")) {
-        showPhoto(cameraOutput.src, false); // Don't auto-upload on close since this is just viewing
+        showPhotoGallery();
     }
 });
 
