@@ -191,6 +191,33 @@ body {
     transform: translateY(-1px) !important;
 }
 
+/* Download button styles */
+.swal-download-button {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 25px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+    margin: 0 5px !important;
+}
+
+.swal-download-button:hover {
+    background: linear-gradient(135deg, #218838, #1ea572) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+}
+
+.swal-download-button:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3) !important;
+}
+
 /* Landscape orientation layout */
 .swal-landscape {
     display: flex !important;

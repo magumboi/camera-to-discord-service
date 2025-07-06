@@ -564,6 +564,8 @@ function showGalleryPhoto(photoUrl, index) {
         confirmButtonText: 'Subir',
         showCancelButton: true,
         cancelButtonText: 'Volver a Galería',
+        showDenyButton: true,
+        denyButtonText: 'Descargar',
         width: '90vw',
         heightAuto: false,
         background: 'rgba(0, 0, 0, 0.9)',
@@ -574,7 +576,8 @@ function showGalleryPhoto(photoUrl, index) {
             title: 'swal-title-white',
             actions: 'swal-actions-inline',
             confirmButton: 'swal-confirm-button',
-            cancelButton: 'swal-cancel-button'
+            cancelButton: 'swal-cancel-button',
+            denyButton: 'swal-download-button'
         },
         didOpen: () => {
             // Ensure image fits within viewport
@@ -595,6 +598,9 @@ function showGalleryPhoto(photoUrl, index) {
         if (result.isConfirmed) {
             // User clicked "Subir" - show success/error messages
             uploadPhoto(photoUrl, true);
+        } else if (result.isDenied) {
+            // User clicked "Descargar" - download the photo
+            downloadPhoto(photoUrl, photo.timestamp);
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             // User clicked "Volver a Galería" - show gallery again
             showPhotoGallery();
@@ -717,5 +723,57 @@ async function uploadPhoto(imageDataUrl, showMessages = true) {
                 }
             });
         }
+    }
+}
+
+// Function to download photo
+function downloadPhoto(imageDataUrl, timestamp) {
+    try {
+        // Create a download link
+        const link = document.createElement('a');
+        link.href = imageDataUrl;
+        
+        // Generate filename with timestamp
+        const date = new Date(timestamp);
+        const formattedTimestamp = date.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' + 
+                                   date.toTimeString().split(' ')[0].replace(/:/g, '-');
+        link.download = `camera-photo-${formattedTimestamp}.jpg`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        Swal.fire({
+            title: '¡Descarga iniciada!',
+            text: 'La foto se está descargando',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#ffffff',
+            customClass: {
+                popup: 'swal-responsive-popup',
+                title: 'swal-title-white'
+            }
+        });
+    } catch (error) {
+        console.error('Error downloading photo:', error);
+        
+        // Show error message
+        Swal.fire({
+            title: 'Error al descargar',
+            text: 'No se pudo descargar la foto.',
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#ffffff',
+            customClass: {
+                popup: 'swal-responsive-popup',
+                title: 'swal-title-white',
+                confirmButton: 'swal-confirm-button'
+            }
+        });
     }
 }
