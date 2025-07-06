@@ -447,13 +447,16 @@ function showPhoto(photoUrl) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // User clicked "Subir"
-            uploadPhoto(photoUrl);
+            // User clicked "Subir" - show success/error messages
+            uploadPhoto(photoUrl, true);
         } else if (result.dismiss === Swal.DismissReason.close) {
-            // User clicked the close button - also upload photo
-            uploadPhoto(photoUrl);
+            // User clicked the close button (X) - upload silently
+            uploadPhoto(photoUrl, false);
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // User clicked "Cerrar" button - upload silently
+            uploadPhoto(photoUrl, false);
         }
-        // If cancelled, do nothing
+        // Any other dismiss reason (like clicking outside) won't upload
     });
 }
 
@@ -465,44 +468,48 @@ cameraOutput.addEventListener('click', function() {
 });
 
 // Function to upload photo to webhook
-async function uploadPhoto(imageDataUrl) {
+async function uploadPhoto(imageDataUrl, showMessages = true) {
     // Get webhook URL from Thymeleaf variable
     const webhookUrl = window.webhookUrl;
     
     if (!webhookUrl) {
-        Swal.fire({
-            title: 'Webhook no configurado',
-            text: 'La URL del webhook no está configurada en el servidor.',
-            icon: 'error',
-            confirmButtonText: 'Entendido',
-            background: 'rgba(0, 0, 0, 0.9)',
-            color: '#ffffff',
-            customClass: {
-                popup: 'swal-responsive-popup',
-                title: 'swal-title-white',
-                confirmButton: 'swal-confirm-button'
-            }
-        });
+        if (showMessages) {
+            Swal.fire({
+                title: 'Webhook no configurado',
+                text: 'La URL del webhook no está configurada en el servidor.',
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                background: 'rgba(0, 0, 0, 0.9)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'swal-responsive-popup',
+                    title: 'swal-title-white',
+                    confirmButton: 'swal-confirm-button'
+                }
+            });
+        }
         return;
     }
 
     try {
-        // Show loading indicator
-        Swal.fire({
-            title: 'Subiendo foto...',
-            text: 'Por favor espera mientras se sube la foto',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            background: 'rgba(0, 0, 0, 0.9)',
-            color: '#ffffff',
-            customClass: {
-                popup: 'swal-responsive-popup',
-                title: 'swal-title-white'
-            },
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        // Show loading indicator only if messages are enabled
+        if (showMessages) {
+            Swal.fire({
+                title: 'Subiendo foto...',
+                text: 'Por favor espera mientras se sube la foto',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                background: 'rgba(0, 0, 0, 0.9)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'swal-responsive-popup',
+                    title: 'swal-title-white'
+                },
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
 
         // Convert data URL to blob
         const response = await fetch(imageDataUrl);
@@ -523,39 +530,43 @@ async function uploadPhoto(imageDataUrl) {
         });
         
         if (webhookResponse.ok) {
-            // Success
-            Swal.fire({
-                title: '¡Foto subida!',
-                text: 'La foto se ha subido exitosamente',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false,
-                background: 'rgba(0, 0, 0, 0.9)',
-                color: '#ffffff',
-                customClass: {
-                    popup: 'swal-responsive-popup',
-                    title: 'swal-title-white'
-                }
-            });
+            // Success - only show message if enabled
+            if (showMessages) {
+                Swal.fire({
+                    title: '¡Foto subida!',
+                    text: 'La foto se ha subido exitosamente',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: 'rgba(0, 0, 0, 0.9)',
+                    color: '#ffffff',
+                    customClass: {
+                        popup: 'swal-responsive-popup',
+                        title: 'swal-title-white'
+                    }
+                });
+            }
         } else {
             throw new Error(`Webhook API error: ${webhookResponse.status}`);
         }
     } catch (error) {
         console.error('Error uploading photo:', error);
         
-        // Show error message
-        Swal.fire({
-            title: 'Error al subir',
-            text: 'No se pudo subir la foto. Verifica la configuración del servidor.',
-            icon: 'error',
-            confirmButtonText: 'Entendido',
-            background: 'rgba(0, 0, 0, 0.9)',
-            color: '#ffffff',
-            customClass: {
-                popup: 'swal-responsive-popup',
-                title: 'swal-title-white',
-                confirmButton: 'swal-confirm-button'
-            }
-        });
+        // Show error message only if enabled
+        if (showMessages) {
+            Swal.fire({
+                title: 'Error al subir',
+                text: 'No se pudo subir la foto. Verifica la configuración del servidor.',
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                background: 'rgba(0, 0, 0, 0.9)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'swal-responsive-popup',
+                    title: 'swal-title-white',
+                    confirmButton: 'swal-confirm-button'
+                }
+            });
+        }
     }
 }
