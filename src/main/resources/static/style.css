@@ -485,3 +485,43 @@ body {
         max-height: 65vh;
     }
 }
+
+/* Gallery photo info styles */
+.gallery-photo-info {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.gallery-photo-timestamp {
+    font-size: 0.9rem;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced gallery photo modal styles */
+.swal-responsive-popup .gallery-photo-info {
+    order: -1;
+    margin: 0 0 1rem 0;
+}
+
+/* Landscape specific styles for gallery photo info */
+@media (orientation: landscape) and (max-height: 600px) {
+    .gallery-photo-timestamp {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.8rem;
+    }
+}
+
+/* Mobile specific styles for gallery photo info */
+@media (max-width: 768px) {
+    .gallery-photo-timestamp {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}

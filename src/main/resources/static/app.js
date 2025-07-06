@@ -542,7 +542,68 @@ function showPhotoGallery() {
 // Show individual photo from gallery
 function showGalleryPhoto(photoUrl, index) {
     const photo = photoGallery[index];
-    showPhoto(photoUrl, false); // Don't auto-upload on close since this is just viewing
+    const formattedDate = new Date(photo.timestamp).toLocaleString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    Swal.fire({
+        title: 'Foto de Galería',
+        html: `<div class="gallery-photo-info">
+                  <div class="gallery-photo-timestamp">📅 ${formattedDate}</div>
+               </div>`,
+        imageUrl: photoUrl,
+        imageWidth: 'auto',
+        imageHeight: 'auto',
+        imageAlt: 'Foto de galería',
+        showCloseButton: true,
+        confirmButtonText: 'Subir',
+        showCancelButton: true,
+        cancelButtonText: 'Volver a Galería',
+        width: '90vw',
+        heightAuto: false,
+        background: 'rgba(0, 0, 0, 0.9)',
+        color: '#ffffff',
+        customClass: {
+            popup: 'swal-responsive-popup',
+            image: 'swal-responsive-image',
+            title: 'swal-title-white',
+            actions: 'swal-actions-inline',
+            confirmButton: 'swal-confirm-button',
+            cancelButton: 'swal-cancel-button'
+        },
+        didOpen: () => {
+            // Ensure image fits within viewport
+            const image = document.querySelector('.swal2-image');
+            if (image) {
+                image.style.maxWidth = '100%';
+                image.style.maxHeight = '70vh';
+                image.style.objectFit = 'contain';
+            }
+            
+            // Adjust layout for landscape orientation
+            const popup = document.querySelector('.swal2-popup');
+            if (window.innerWidth > window.innerHeight) {
+                popup.classList.add('swal-landscape');
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // User clicked "Subir" - show success/error messages
+            uploadPhoto(photoUrl, true);
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // User clicked "Volver a Galería" - show gallery again
+            showPhotoGallery();
+        } else if (result.dismiss === Swal.DismissReason.close) {
+            // User clicked the close button (X) - also return to gallery
+            showPhotoGallery();
+        }
+        // Any other dismiss reason will just close
+    });
 }
 
 // Make showGalleryPhoto globally accessible
