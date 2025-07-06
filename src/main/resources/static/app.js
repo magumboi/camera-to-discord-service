@@ -821,28 +821,6 @@ cameraOutput.addEventListener('click', function () {
 
 // Function to upload photo to webhook
 async function uploadPhoto(imageDataUrl, showMessages = true) {
-    // Get webhook URL from Thymeleaf variable
-    const webhookUrl = window.webhookUrl;
-
-    if (!webhookUrl) {
-        if (showMessages) {
-            Swal.fire({
-                title: 'Webhook no configurado',
-                text: 'La URL del webhook no está configurada en el servidor.',
-                icon: 'error',
-                confirmButtonText: 'Entendido',
-                background: 'rgba(0, 0, 0, 0.9)',
-                color: '#ffffff',
-                customClass: {
-                    popup: 'swal-responsive-popup',
-                    title: 'swal-title-white',
-                    confirmButton: 'swal-confirm-button'
-                }
-            });
-        }
-        return;
-    }
-
     try {
         // Show loading indicator only if messages are enabled
         if (showMessages) {
@@ -867,21 +845,22 @@ async function uploadPhoto(imageDataUrl, showMessages = true) {
         const response = await fetch(imageDataUrl);
         const blob = await response.blob();
 
-        // Create form data
+        // Create form data for the backend endpoint
         const formData = new FormData();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `camera-photo-${timestamp}.jpg`;
 
         formData.append('file', blob, filename);
-        formData.append('content', `📸 Nueva foto tomada - ${new Date().toLocaleString()}`);
 
-        // Send to webhook
-        const webhookResponse = await fetch(webhookUrl, {
+        // Send to our backend endpoint instead of directly to webhook
+        const uploadResponse = await fetch('/api/upload-photo', {
             method: 'POST',
             body: formData
         });
 
-        if (webhookResponse.ok) {
+        const result = await uploadResponse.json();
+
+        if (uploadResponse.ok) {
             // Success - only show message if enabled
             if (showMessages) {
                 Swal.fire({
@@ -899,7 +878,7 @@ async function uploadPhoto(imageDataUrl, showMessages = true) {
                 });
             }
         } else {
-            throw new Error(`Webhook API error: ${webhookResponse.status}`);
+            throw new Error(result.error || `Upload API error: ${uploadResponse.status}`);
         }
     } catch (error) {
         console.error('Error uploading photo:', error);

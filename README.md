@@ -19,7 +19,9 @@ A modern web camera application built with Spring Boot and vanilla JavaScript th
 - **Photo Metadata**: Each photo includes timestamp and unique ID
 
 ### 📤 Upload & Download
-- **Automatic Webhook Upload**: Configurable webhook URL for automatic photo uploads
+- **Backend Upload Service**: Photos are uploaded via a secure Java REST endpoint
+- **Webhook Integration**: Backend forwards photos to configured webhook services (Discord, Slack, etc.)
+- **Automatic Upload**: Configurable webhook URL for automatic photo uploads
 - **Manual Upload Control**: Users can choose when to upload photos
 - **Download Support**: Download photos directly to device with formatted filenames
 - **Silent Upload Option**: Background uploads without user notification
@@ -46,7 +48,25 @@ A modern web camera application built with Spring Boot and vanilla JavaScript th
 - **Build Tool**: Maven
 - **Template Engine**: Thymeleaf
 
-## 🚀 Getting Started
+## 🏗️ Architecture
+
+### Upload Flow
+1. **Frontend**: JavaScript captures photo and creates form data
+2. **Backend API**: Spring Boot REST endpoint (`/api/upload-photo`) receives and validates the photo
+3. **Webhook Service**: Java service forwards the photo to configured webhook
+4. **Response**: Success/error status returned to frontend (including webhook configuration errors)
+
+### Components
+- **WebController**: Main controller serving the UI and home page
+- **PhotoUploadController**: Dedicated REST controller handling photo upload API
+- **WebhookService**: Service class handling webhook communication using WebClient
+- **Frontend**: JavaScript camera interface with localStorage photo management
+
+### Security
+- **File Validation**: Backend validates file type and size
+- **Webhook Validation**: Backend validates webhook configuration before processing
+- **Error Handling**: Comprehensive error handling at all levels with user-friendly messages
+- **Async Processing**: Non-blocking photo upload processing
 
 ### Prerequisites
 
@@ -242,7 +262,63 @@ src/
 - **Network Errors**: Check webhook URL validity and network connectivity
 - **File Size Limits**: Large photos may exceed webhook size limits (Discord: 8MB)
 
-## 📄 License
+## � API Documentation
+
+### Upload Photo Endpoint
+
+```
+POST /api/upload-photo
+Content-Type: multipart/form-data
+```
+
+**Parameters:**
+- `file`: MultipartFile (required) - The image file to upload
+
+**Responses:**
+
+Success (200 OK):
+```json
+{
+  "message": "Photo uploaded successfully"
+}
+```
+
+Error (400 Bad Request):
+```json
+{
+  "error": "No file provided"
+}
+```
+
+Error (400 Bad Request):
+```json
+{
+  "error": "File must be an image"
+}
+```
+
+Error (400 Bad Request):
+```json
+{
+  "error": "Webhook no configurado. La URL del webhook no está configurada en el servidor."
+}
+```
+
+Error (500 Internal Server Error):
+```json
+{
+  "error": "Failed to upload photo: [error details]"
+}
+```
+
+**Example using curl:**
+```bash
+curl -X POST \
+  -F "file=@photo.jpg" \
+  http://localhost:8080/api/upload-photo
+```
+
+## �📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
