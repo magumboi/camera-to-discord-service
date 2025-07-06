@@ -57,3 +57,63 @@ html, body{
     right: 20px;
     z-index: 2;
 }
+
+/* SweetAlert responsive styles */
+.swal-responsive-popup {
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+}
+
+.swal-responsive-image {
+    max-width: 100% !important;
+    max-height: 70vh !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+/* Override SweetAlert default styles for mobile */
+@media (max-width: 768px) {
+    .swal2-popup {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        margin: 0 !important;
+        padding: 0.5rem !important;
+    }
+    
+    .swal2-image {
+        max-width: 100% !important;
+        max-height: 60vh !important;
+    }
+    
+    .swal2-title {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .swal2-actions {
+        margin-top: 0.5rem !important;
+    }
+}
+
+/* Ensure SweetAlert doesn't overflow on very small screens */
+@media (max-width: 480px) {
+    .swal2-popup {
+        width: 98vw !important;
+        max-width: 98vw !important;
+        padding: 0.25rem !important;
+    }
+    
+    .swal2-image {
+        max-height: 50vh !important;
+    }
+    
+    .swal2-title {
+        font-size: 1rem !important;
+    }
+}
