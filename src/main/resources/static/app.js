@@ -318,6 +318,121 @@ let maxMotionHistory = 6; // Fewer frames for faster response (was 8)
 // Photo gallery storage
 let photoGallery = []; // Store the last 6 photos
 const maxGallerySize = 6;
+const GALLERY_STORAGE_KEY = 'cameraGallery';
+
+// Load gallery from localStorage on startup
+function loadGalleryFromStorage() {
+    if (!isLocalStorageAvailable()) {
+        console.warn('localStorage not available, gallery will not persist');
+        return;
+    }
+    
+    try {
+        const savedGallery = localStorage.getItem(GALLERY_STORAGE_KEY);
+        if (savedGallery) {
+            const parsedGallery = JSON.parse(savedGallery);
+            
+            // Validate the data structure
+            if (Array.isArray(parsedGallery)) {
+                photoGallery = parsedGallery.filter(photo => 
+                    photo && photo.url && photo.timestamp && photo.id
+                );
+                
+                // Ensure we don't exceed maxGallerySize
+                if (photoGallery.length > maxGallerySize) {
+                    photoGallery = photoGallery.slice(0, maxGallerySize);
+                    saveGalleryToStorage(); // Save the trimmed version
+                }
+                
+                console.log(`Loaded ${photoGallery.length} photos from localStorage`);
+                
+                // Update camera output thumbnail if there are photos
+                if (photoGallery.length > 0) {
+                    const lastPhoto = photoGallery[0];
+                    cameraOutput.src = lastPhoto.url;
+                    cameraOutput.classList.add("taken");
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading gallery from localStorage:', error);
+        // Clear corrupted data
+        localStorage.removeItem(GALLERY_STORAGE_KEY);
+        photoGallery = [];
+    }
+}
+
+// Save gallery to localStorage
+function saveGalleryToStorage() {
+    if (!isLocalStorageAvailable()) {
+        console.warn('localStorage not available, gallery will not persist');
+        return;
+    }
+    
+    try {
+        const galleryData = JSON.stringify(photoGallery);
+        localStorage.setItem(GALLERY_STORAGE_KEY, galleryData);
+        console.log(`Saved ${photoGallery.length} photos to localStorage`);
+    } catch (error) {
+        console.error('Error saving gallery to localStorage:', error);
+        
+        // If storage is full, try to clear old data and save again
+        if (error.name === 'QuotaExceededError') {
+            console.warn('Storage quota exceeded, clearing oldest photos');
+            if (photoGallery.length > 3) {
+                photoGallery = photoGallery.slice(0, 3);
+                try {
+                    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(photoGallery));
+                    console.log('Saved reduced gallery to localStorage');
+                } catch (secondError) {
+                    console.error('Failed to save even reduced gallery:', secondError);
+                }
+            }
+        }
+    }
+}
+
+// Clear gallery from localStorage (utility function)
+function clearGalleryFromStorage() {
+    try {
+        localStorage.removeItem(GALLERY_STORAGE_KEY);
+        photoGallery = [];
+        console.log('Gallery cleared from localStorage');
+        
+        // Reset camera output
+        cameraOutput.src = '';
+        cameraOutput.classList.remove("taken");
+    } catch (error) {
+        console.error('Error clearing gallery from localStorage:', error);
+    }
+}
+
+// Get gallery storage size (utility function)
+function getGalleryStorageSize() {
+    try {
+        const savedGallery = localStorage.getItem(GALLERY_STORAGE_KEY);
+        if (savedGallery) {
+            return new Blob([savedGallery]).size;
+        }
+        return 0;
+    } catch (error) {
+        console.error('Error getting gallery storage size:', error);
+        return 0;
+    }
+}
+
+// Check localStorage availability
+function isLocalStorageAvailable() {
+    try {
+        const test = '__localStorage_test__';
+        localStorage.setItem(test, 'test');
+        localStorage.removeItem(test);
+        return true;
+    } catch (error) {
+        console.warn('localStorage is not available:', error);
+        return false;
+    }
+}
 
 // Start motion detection when camera starts
 function startMotionDetection() {
@@ -411,7 +526,16 @@ function updateMotionIndicator(motionLevel) {
 }
 
 // Start the video stream when the window loads
-window.addEventListener("load", cameraStart, false);
+window.addEventListener("load", function() {
+    // Load gallery from localStorage first
+    loadGalleryFromStorage();
+    
+    // Show storage info for debugging
+    showStorageInfo();
+    
+    // Then start the camera
+    cameraStart();
+}, false);
 
 //show photo in a sweet alert
 function showPhoto(photoUrl, autoUploadOnClose = false) {
@@ -484,6 +608,9 @@ function addPhotoToGallery(photoDataUrl) {
     if (photoGallery.length > maxGallerySize) {
         photoGallery = photoGallery.slice(0, maxGallerySize);
     }
+    
+    // Save to localStorage
+    saveGalleryToStorage();
 }
 
 // Show photo gallery
@@ -781,3 +908,29 @@ function downloadPhoto(imageDataUrl, timestamp) {
         });
     }
 }
+
+// Show storage info in console (for debugging)
+function showStorageInfo() {
+    if (!isLocalStorageAvailable()) {
+        console.log('Storage Info: localStorage not available');
+        return;
+    }
+    
+    try {
+        const gallerySize = getGalleryStorageSize();
+        const totalStorage = JSON.stringify(localStorage).length;
+        
+        console.log('Storage Info:', {
+            galleryPhotos: photoGallery.length,
+            gallerySize: `${(gallerySize / 1024).toFixed(2)} KB`,
+            totalLocalStorage: `${(totalStorage / 1024).toFixed(2)} KB`,
+            storageAvailable: isLocalStorageAvailable()
+        });
+    } catch (error) {
+        console.error('Error getting storage info:', error);
+    }
+}
+
+// Make storage functions available globally for debugging
+window.clearGalleryFromStorage = clearGalleryFromStorage;
+window.showStorageInfo = showStorageInfo;
