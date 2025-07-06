@@ -423,9 +423,14 @@ function showPhoto(photoUrl) {
         confirmButtonText: 'Aceptar',
         width: '90vw', // 90% of viewport width
         heightAuto: false, // Prevent auto height
+        background: 'rgba(0, 0, 0, 0.9)', // Dark semi-transparent background
+        color: '#ffffff', // White text
         customClass: {
             popup: 'swal-responsive-popup',
-            image: 'swal-responsive-image'
+            image: 'swal-responsive-image',
+            title: 'swal-title-white',
+            actions: 'swal-actions-inline',
+            confirmButton: 'swal-confirm-button'
         },
         didOpen: () => {
             // Ensure image fits within viewport
@@ -434,6 +439,12 @@ function showPhoto(photoUrl) {
                 image.style.maxWidth = '100%';
                 image.style.maxHeight = '70vh'; // Max 70% of viewport height
                 image.style.objectFit = 'contain';
+            }
+            
+            // Adjust layout for landscape orientation
+            const popup = document.querySelector('.swal2-popup');
+            if (window.innerWidth > window.innerHeight) {
+                popup.classList.add('swal-landscape');
             }
         }
     });

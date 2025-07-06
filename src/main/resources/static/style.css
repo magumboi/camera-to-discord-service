@@ -1,22 +1,29 @@
-html, body{
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  /* Prevent zooming */
-  touch-action: manipulation;
-  -ms-touch-action: manipulation;
-  overflow-x: hidden;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    /* Prevent zooming */
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+    overflow-x: hidden;
 }
 
-#camera, #camera--view, #camera--sensor, #camera--output{
+#camera,
+#camera--view,
+#camera--sensor,
+#camera--output {
     position: fixed;
     height: 100%;
     width: 100%;
     object-fit: cover;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+    overflow-x: hidden;
 }
 
-#camera--trigger{
+#camera--trigger {
     width: 200px;
     background-color: black;
     color: white;
@@ -25,13 +32,13 @@ html, body{
     border: none;
     padding: 15px 20px;
     text-align: center;
-    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
     position: fixed;
     bottom: 30px;
     left: calc(50% - 125px);
 }
 
-#camera--toggle{
+#camera--toggle {
     position: fixed;
     bottom: 30px;
     left: calc(50% + 110px);
@@ -44,15 +51,15 @@ html, body{
     border: none;
     padding: 10px;
     text-align: center;
-    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
 }
 
-.taken{
-    height: 100px!important;
-    width: 100px!important;
+.taken {
+    height: 100px !important;
+    width: 100px !important;
     transition: all 0.5s ease-in;
     border: solid 3px white;
-    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
     top: 20px;
     right: 20px;
     z-index: 2;
@@ -67,6 +74,9 @@ html, body{
     margin: 0 !important;
     padding: 1rem !important;
     box-sizing: border-box !important;
+    background: rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid #333 !important;
+    border-radius: 10px !important;
 }
 
 .swal-responsive-image {
@@ -75,6 +85,68 @@ html, body{
     width: auto !important;
     height: auto !important;
     object-fit: contain !important;
+    border-radius: 8px !important;
+}
+
+.swal-title-white {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+.swal-confirm-button {
+    background-color: #007bff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 8px 20px !important;
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+.swal-confirm-button:hover {
+    background-color: #0056b3 !important;
+}
+
+/* Landscape orientation layout */
+.swal-landscape {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    max-width: 95vw !important;
+    max-height: 85vh !important;
+}
+
+.swal-landscape .swal2-header {
+    display: none !important;
+}
+
+.swal-landscape .swal2-content {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 20px !important;
+    margin: 0 !important;
+    padding: 10px !important;
+}
+
+.swal-landscape .swal2-image {
+    max-width: 60vw !important;
+    max-height: 75vh !important;
+    flex-shrink: 0 !important;
+}
+
+.swal-landscape .swal2-actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    padding: 0 20px !important;
+    min-width: 120px !important;
+}
+
+.swal-landscape .swal2-close {
+    top: 10px !important;
+    right: 10px !important;
+    color: #ffffff !important;
+    font-size: 24px !important;
 }
 
 /* Override SweetAlert default styles for mobile */
@@ -84,20 +156,37 @@ html, body{
         max-width: 95vw !important;
         margin: 0 !important;
         padding: 0.5rem !important;
+        background: rgba(0, 0, 0, 0.9) !important;
     }
-    
+
     .swal2-image {
         max-width: 100% !important;
         max-height: 60vh !important;
     }
-    
+
     .swal2-title {
         font-size: 1.2rem !important;
         margin-bottom: 0.5rem !important;
+        color: #ffffff !important;
     }
-    
+
     .swal2-actions {
         margin-top: 0.5rem !important;
+    }
+
+    /* Landscape on mobile */
+    .swal-landscape {
+        flex-direction: row !important;
+    }
+
+    .swal-landscape .swal2-image {
+        max-width: 50vw !important;
+        max-height: 70vh !important;
+    }
+
+    .swal-landscape .swal2-actions {
+        flex-direction: column !important;
+        padding: 0 10px !important;
     }
 }
 
@@ -107,13 +196,21 @@ html, body{
         width: 98vw !important;
         max-width: 98vw !important;
         padding: 0.25rem !important;
+        background: rgba(0, 0, 0, 0.9) !important;
     }
-    
+
     .swal2-image {
         max-height: 50vh !important;
     }
-    
+
     .swal2-title {
         font-size: 1rem !important;
+        color: #ffffff !important;
+    }
+
+    /* Very small landscape */
+    .swal-landscape .swal2-image {
+        max-width: 45vw !important;
+        max-height: 65vh !important;
     }
 }
