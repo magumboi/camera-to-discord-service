@@ -316,8 +316,10 @@ let motionHistory = []; // Track motion over time for better stability
 let maxMotionHistory = 6; // Fewer frames for faster response (was 8)
 
 // Photo gallery storage
-let photoGallery = []; // Store the last 6 photos
-const maxGallerySize = 6;
+let photoGallery = []; // Store up to 6 photos for display
+let persistentGallery = []; // Store up to 3 photos in localStorage
+const maxGallerySize = 6; // Display limit
+const maxPersistentSize = 3; // Storage limit
 const GALLERY_STORAGE_KEY = 'cameraGallery';
 
 // Load gallery from localStorage on startup
@@ -334,17 +336,20 @@ function loadGalleryFromStorage() {
             
             // Validate the data structure
             if (Array.isArray(parsedGallery)) {
-                photoGallery = parsedGallery.filter(photo => 
+                persistentGallery = parsedGallery.filter(photo => 
                     photo && photo.url && photo.timestamp && photo.id
                 );
                 
-                // Ensure we don't exceed maxGallerySize
-                if (photoGallery.length > maxGallerySize) {
-                    photoGallery = photoGallery.slice(0, maxGallerySize);
+                // Ensure we don't exceed maxPersistentSize
+                if (persistentGallery.length > maxPersistentSize) {
+                    persistentGallery = persistentGallery.slice(0, maxPersistentSize);
                     saveGalleryToStorage(); // Save the trimmed version
                 }
                 
-                console.log(`Loaded ${photoGallery.length} photos from localStorage`);
+                // Copy persistent gallery to display gallery
+                photoGallery = [...persistentGallery];
+                
+                console.log(`Loaded ${persistentGallery.length} photos from localStorage`);
                 
                 // Update camera output thumbnail if there are photos
                 if (photoGallery.length > 0) {
@@ -359,6 +364,7 @@ function loadGalleryFromStorage() {
         // Clear corrupted data
         localStorage.removeItem(GALLERY_STORAGE_KEY);
         photoGallery = [];
+        persistentGallery = [];
     }
 }
 
@@ -370,22 +376,39 @@ function saveGalleryToStorage() {
     }
     
     try {
-        const galleryData = JSON.stringify(photoGallery);
+        // Only save the persistent gallery (first 3 photos)
+        const galleryData = JSON.stringify(persistentGallery);
         localStorage.setItem(GALLERY_STORAGE_KEY, galleryData);
-        console.log(`Saved ${photoGallery.length} photos to localStorage`);
+        console.log(`Saved ${persistentGallery.length} photos to localStorage (${photoGallery.length} total in memory)`);
     } catch (error) {
         console.error('Error saving gallery to localStorage:', error);
         
-        // If storage is full, try to clear old data and save again
+        // If storage is full, try with even fewer photos
         if (error.name === 'QuotaExceededError') {
-            console.warn('Storage quota exceeded, clearing oldest photos');
-            if (photoGallery.length > 3) {
-                photoGallery = photoGallery.slice(0, 3);
+            console.warn('Storage quota exceeded, reducing persistent photos');
+            
+            // Try with 2 photos
+            if (persistentGallery.length > 2) {
+                persistentGallery = persistentGallery.slice(0, 2);
                 try {
-                    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(photoGallery));
-                    console.log('Saved reduced gallery to localStorage');
+                    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(persistentGallery));
+                    console.log('Saved reduced gallery (2 photos) to localStorage');
+                    return;
                 } catch (secondError) {
-                    console.error('Failed to save even reduced gallery:', secondError);
+                    console.warn('Still failed with 2 photos, trying with 1');
+                }
+            }
+            
+            // Try with just 1 photo
+            if (persistentGallery.length > 1) {
+                persistentGallery = persistentGallery.slice(0, 1);
+                try {
+                    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(persistentGallery));
+                    console.log('Saved minimal gallery (1 photo) to localStorage');
+                    return;
+                } catch (thirdError) {
+                    console.error('Failed to save even 1 photo to localStorage:', thirdError);
+                    persistentGallery = [];
                 }
             }
         }
@@ -397,6 +420,7 @@ function clearGalleryFromStorage() {
     try {
         localStorage.removeItem(GALLERY_STORAGE_KEY);
         photoGallery = [];
+        persistentGallery = [];
         console.log('Gallery cleared from localStorage');
         
         // Reset camera output
@@ -419,6 +443,40 @@ function getGalleryStorageSize() {
         console.error('Error getting gallery storage size:', error);
         return 0;
     }
+}
+
+// Get available storage space estimation
+function getAvailableStorageSpace() {
+    if (!isLocalStorageAvailable()) {
+        return 0;
+    }
+    
+    try {
+        // Rough estimation of localStorage usage
+        const totalUsed = JSON.stringify(localStorage).length;
+        const maxStorage = 5 * 1024 * 1024; // Estimate 5MB limit for localStorage
+        return Math.max(0, maxStorage - totalUsed);
+    } catch (error) {
+        console.error('Error estimating available storage:', error);
+        return 0;
+    }
+}
+
+// Check how many photos can fit in storage
+function calculateOptimalPersistentSize() {
+    const availableSpace = getAvailableStorageSpace();
+    const currentGallerySize = getGalleryStorageSize();
+    
+    if (persistentGallery.length === 0) {
+        return maxPersistentSize;
+    }
+    
+    // Estimate average photo size from current gallery
+    const avgPhotoSize = currentGallerySize / persistentGallery.length;
+    const photosCanFit = Math.floor((availableSpace + currentGallerySize) / avgPhotoSize);
+    
+    // Return optimal size, but not more than maxPersistentSize
+    return Math.min(Math.max(1, photosCanFit), maxPersistentSize);
 }
 
 // Check localStorage availability
@@ -601,12 +659,20 @@ function addPhotoToGallery(photoDataUrl) {
         id: Date.now() + Math.random() // Unique ID
     };
     
-    // Add to beginning of array
+    // Add to beginning of display gallery
     photoGallery.unshift(photoData);
     
-    // Keep only the last 6 photos
+    // Keep only the last 6 photos for display
     if (photoGallery.length > maxGallerySize) {
         photoGallery = photoGallery.slice(0, maxGallerySize);
+    }
+    
+    // Add to persistent gallery (only first 3)
+    persistentGallery.unshift(photoData);
+    
+    // Keep only the last 3 photos for storage
+    if (persistentGallery.length > maxPersistentSize) {
+        persistentGallery = persistentGallery.slice(0, maxPersistentSize);
     }
     
     // Save to localStorage
@@ -919,11 +985,18 @@ function showStorageInfo() {
     try {
         const gallerySize = getGalleryStorageSize();
         const totalStorage = JSON.stringify(localStorage).length;
+        const availableSpace = getAvailableStorageSpace();
+        const optimalSize = calculateOptimalPersistentSize();
         
         console.log('Storage Info:', {
-            galleryPhotos: photoGallery.length,
+            displayPhotos: photoGallery.length,
+            persistentPhotos: persistentGallery.length,
+            maxDisplay: maxGallerySize,
+            maxPersistent: maxPersistentSize,
+            optimalPersistent: optimalSize,
             gallerySize: `${(gallerySize / 1024).toFixed(2)} KB`,
             totalLocalStorage: `${(totalStorage / 1024).toFixed(2)} KB`,
+            availableSpace: `${(availableSpace / 1024).toFixed(2)} KB`,
             storageAvailable: isLocalStorageAvailable()
         });
     } catch (error) {
@@ -931,6 +1004,44 @@ function showStorageInfo() {
     }
 }
 
+// Dynamic storage optimization
+function optimizeStorageSize() {
+    if (!isLocalStorageAvailable()) {
+        return;
+    }
+    
+    const optimalSize = calculateOptimalPersistentSize();
+    
+    if (optimalSize < persistentGallery.length) {
+        console.log(`Optimizing storage: reducing from ${persistentGallery.length} to ${optimalSize} photos`);
+        persistentGallery = persistentGallery.slice(0, optimalSize);
+        saveGalleryToStorage();
+    }
+}
+
+// Add a function to manually add photos to session gallery (for testing)
+function addSessionPhoto(photoDataUrl) {
+    const photoData = {
+        url: photoDataUrl,
+        timestamp: new Date().toISOString(),
+        id: Date.now() + Math.random(),
+        sessionOnly: true // Mark as session-only
+    };
+    
+    // Add to display gallery only (not persistent)
+    photoGallery.unshift(photoData);
+    
+    // Keep only the last 6 photos for display
+    if (photoGallery.length > maxGallerySize) {
+        photoGallery = photoGallery.slice(0, maxGallerySize);
+    }
+    
+    console.log(`Added session-only photo. Display: ${photoGallery.length}, Persistent: ${persistentGallery.length}`);
+}
+
 // Make storage functions available globally for debugging
 window.clearGalleryFromStorage = clearGalleryFromStorage;
 window.showStorageInfo = showStorageInfo;
+window.optimizeStorageSize = optimizeStorageSize;
+window.addSessionPhoto = addSessionPhoto;
+window.calculateOptimalPersistentSize = calculateOptimalPersistentSize;
