@@ -186,7 +186,7 @@ function performCapture(context) {
     cameraOutput.classList.add("taken");
     
     // Show the photo in a sweet alert
-    showPhoto(cameraOutput.src);
+    showPhoto(cameraOutput.src, true); // Auto-upload on close since this is a new photo
 }
 
 // Photo click handled by the double-tap listener above
@@ -407,7 +407,7 @@ function updateMotionIndicator(motionLevel) {
 window.addEventListener("load", cameraStart, false);
 
 //show photo in a sweet alert
-function showPhoto(photoUrl) {
+function showPhoto(photoUrl, autoUploadOnClose = false) {
     Swal.fire({
         title: 'Foto tomada',
         imageUrl: photoUrl,
@@ -447,23 +447,20 @@ function showPhoto(photoUrl) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // User clicked "Subir" - show success/error messages
+            // User clicked "Subir" - always show success/error messages
             uploadPhoto(photoUrl, true);
-        } else if (result.dismiss === Swal.DismissReason.close) {
-            // User clicked the close button (X) - upload silently
-            uploadPhoto(photoUrl, false);
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // User clicked "Cerrar" button - upload silently
+        } else if (autoUploadOnClose && (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.cancel)) {
+            // Only upload silently if this was called after taking a new photo
             uploadPhoto(photoUrl, false);
         }
-        // Any other dismiss reason (like clicking outside) won't upload
+        // If opened from cameraOutput click, don't upload on close/cancel
     });
 }
 
 // Show photo in sweet alert when clicked
 cameraOutput.addEventListener('click', function() {
     if (cameraOutput.classList.contains("taken")) {
-        showPhoto(cameraOutput.src);
+        showPhoto(cameraOutput.src, false); // Don't auto-upload on close since this is just viewing
     }
 });
 
